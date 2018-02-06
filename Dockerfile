@@ -29,3 +29,16 @@ RUN apt-get install -y nano \
 
 
 RUN rm -rf /var/lib/apt/lists/*
+
+
+WORKDIR /main/
+
+RUN IMG=qemu-image.img \
+	DIR=mount-point.dir \
+	qemu-img create $IMG 1g \
+	mkfs.ext2 $IMG \
+	mkdir $DIR \
+	sudo mount -o loop $IMG $DIR \
+	sudo debootstrap  --arch amd64 trusty $DIR http://archive.ubuntu.com/ubuntu/ \
+	sudo umount $DIR \
+	rmdir $DIR \
