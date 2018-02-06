@@ -38,8 +38,8 @@ RUN IMG=qemu-image.img && \
 	qemu-img create $IMG 1g && \
 	mkfs.ext2 $IMG && \
 	mkdir $DIR && \
-	sudo mount -o loop $IMG $DIR && \
-	sudo debootstrap  --arch amd64 trusty $DIR http://archive.ubuntu.com/ubuntu/ && \
-	sudo umount $DIR && \
+	mount -o loop $IMG $DIR && \
+	debootstrap  --arch amd64 trusty $DIR http://archive.ubuntu.com/ubuntu/ && \
+	umount $DIR && \
 	rmdir $DIR \
 
