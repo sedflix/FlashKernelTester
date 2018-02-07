@@ -34,8 +34,6 @@ RUN mkdir /shared
 VOLUME ["/shared"] 
 WORKDIR /shared
 
-RUN git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-
 # RUN IMG=qemu-image.img && \
 # 	DIR=mount-point.dir && \
 # 	qemu-img create $IMG 1g && \
