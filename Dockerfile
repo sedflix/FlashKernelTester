@@ -23,6 +23,18 @@ RUN apt-get install -yf build-essential qemu-system-x86 \
                                         gcc \
                                         unzip \
 					git
+RUN apt-get install -y virt-viewer \
+                                        libvirt-bin \
+                                        libelf-dev \ 
+                                        chrpath \
+                                        gawk \
+                                        texinfo \
+                                        libsdl1.2-dev \
+                                        whiptail \
+                                        diffstat \
+                                        cpio \
+                                        libssl-dev \
+                                        bc
   
 RUN apt-get install -y nano \
 			minicom
