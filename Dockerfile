@@ -3,6 +3,7 @@ MAINTAINER Siddharth Yadav
 
 ENV ETCDCTL_VERSION v3.0.12
 ENV ETCDCTL_ARCH linux-amd64
+ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get -y update
 RUN apt-get -y upgrade
