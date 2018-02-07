@@ -42,17 +42,13 @@ RUN apt-get install -y nano \
 
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /shared
-VOLUME ["/shared"] 
-WORKDIR /shared
+COPY . /workdir
+RUN chmod +x /workdir/*.sh
 
-# RUN IMG=qemu-image.img && \
-# 	DIR=mount-point.dir && \
-# 	qemu-img create $IMG 1g && \
-# 	mkfs.ext2 $IMG && \
-# 	mkdir $DIR && \
-# 	mount -o loop $IMG $DIR && \
-# 	debootstrap  --arch amd64 trusty $DIR http://archive.ubuntu.com/ubuntu/ && \
-# 	umount $DIR && \
-# 	rmdir $DIR \
+RUN mkdir /shared_kernel
+RUN mkdir /test
+VOLUME ["/shared_kernel","/test"] 
+
+WORKDIR /workdir
+
 
