@@ -10,7 +10,8 @@ RUN apt-get install -yf build-essential qemu-system-x86 qemu-system-arm \
                                         unzip \
                                         wget \ 
                                         qemu \
-                                        virt-manager
+                                        virt-manager \
+					git
 RUN apt-get install -y virt-viewer libvirt-bin \
                                         libelf-dev \ 
                                         chrpath \
@@ -30,16 +31,19 @@ RUN apt-get install -y nano \
 
 RUN rm -rf /var/lib/apt/lists/*
 
+RUN mkdir /shared
+VOLUME ["/shared"] 
+WORKDIR /shared
 
-WORKDIR /main/
+RUN git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 
-RUN IMG=qemu-image.img && \
-	DIR=mount-point.dir && \
-	qemu-img create $IMG 1g && \
-	mkfs.ext2 $IMG && \
-	mkdir $DIR && \
-	mount -o loop $IMG $DIR && \
-	debootstrap  --arch amd64 trusty $DIR http://archive.ubuntu.com/ubuntu/ && \
-	umount $DIR && \
-	rmdir $DIR \
+# RUN IMG=qemu-image.img && \
+# 	DIR=mount-point.dir && \
+# 	qemu-img create $IMG 1g && \
+# 	mkfs.ext2 $IMG && \
+# 	mkdir $DIR && \
+# 	mount -o loop $IMG $DIR && \
+# 	debootstrap  --arch amd64 trusty $DIR http://archive.ubuntu.com/ubuntu/ && \
+# 	umount $DIR && \
+# 	rmdir $DIR \
 
