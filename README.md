@@ -12,19 +12,19 @@ This is my attempt to make compiling of custom linux kernel(for kernel dev) foll
   - This will take some time as it will download ubuntu image.
   - It will change your prompt to something like `root@4d4c9750e9e0:/#`. This is the shell of an full fledged ubuntu running on docker.
 - You should have downloaded your linux kernel on your system (>v4.0. Tested on v4.15 and v4.9)
-- Make the test file required to run on bootup(This is the only code that will run) and store it in a folder with name of the `.c` file as `test.c`
+- Make the test file required to run on bootup (This is the only code that will run on the new kernal) and store it in a folder with name of the `.c` file as `test.c`
   
   
 ## Usage: 
 
-- Clone this repo on your system using: git clone https://github.com/geekSiddharth/kernelTester.git
+- Clone this repo on your system using: `git clone https://github.com/geekSiddharth/kernelTester.git`
 
 - Open ktest.sh to edit the following variable
     - KERNEL_SOURCE
         It refers to the absolute linux kernal path. (Path should end in /)  
         Example: `KERNEL_SOURCE=/home/sid/linux-master/` where `/home/sid/linux-master/` is the absolute linux kernal path
     - TEST_SOURCE
-        It refers to the absolute path of testing code. (Path should end in /)    
+        It refers to the absolute path of the testing code. (Path should end in /)    
         The pointed folder must constain a file called test.c 
         (You can leave it to its default value for seeing if everything is working fine)
 
@@ -37,7 +37,7 @@ This is my attempt to make compiling of custom linux kernel(for kernel dev) foll
 
     Note this may take A LOT OF TIME if you are executing ktest.sh for the first time on you system.
 
-- To test the image and the kernel, use:
+- To test the kernel, use:
     ```
     ./ktest.sh test
     ```
@@ -62,3 +62,4 @@ This is my attempt to make compiling of custom linux kernel(for kernel dev) foll
 ##### Why so fast?
 
 You remember the init process? It is the first process to be executed. Before init starts to execute , the kernel is executing. The test.c file is changed to a static binary and is passed to the kernel as the init process. The kernel executes the the static binary and it exits.
+
