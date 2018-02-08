@@ -17,7 +17,7 @@ This is my attempt to make compiling of custom linux kernel(for kernel dev) foll
   
 ## Usage: 
 
-- Clone this repo on your system using: `git clone https://github.com/geekSiddharth/kernelTester.git`
+- Clone this repo on your system using: `git clone https://github.com/geekSiddharth/FlashKernelTester.git`
 
 - Open ktest.sh to edit the following variable
     - KERNEL_SOURCE
