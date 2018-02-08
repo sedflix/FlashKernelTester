@@ -7,7 +7,7 @@ This is my attempt to make compiling of custom linux kernel(for kernel dev) foll
 
 - Install docker on your system. (The downside)
   - For Ubuntu: https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce-1
-  - For Windows 10:https://docs.docker.com/docker-for-windows/install/ (Stable)
+  - For Windows 10:https://docs.docker.com/toolbox/toolbox_install_windows/
   - For Mac users: https://docs.docker.com/docker-for-mac/install/ (Stable)
   - For anythother system, just google "install docker in X" 
 
