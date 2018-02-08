@@ -1,4 +1,4 @@
-# ktester 
+# FlashKernelTester 
 
 This is my attempt to make compiling of custom linux kernel(for kernel dev) followed by their super fast testing while booting. All this has been made as easy as possible. 
 
