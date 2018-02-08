@@ -11,7 +11,7 @@ echo "TEST INIT MADE"
 echo "---------------------------"
 
 echo "---------------------------"
-echo "Going to start qemu"
+echo "STARTING QEMU"
 echo "---------------------------"
 
 qemu-system-x86_64 \ 

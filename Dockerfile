@@ -50,5 +50,3 @@ RUN mkdir /test
 VOLUME ["/shared_kernel","/test"] 
 
 WORKDIR /workdir
-
-
