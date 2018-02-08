@@ -14,10 +14,4 @@ echo "---------------------------"
 echo "STARTING QEMU"
 echo "---------------------------"
 
-qemu-system-x86_64 \ 
--kernel /shared_kernel/arch/x86_64/boot/bzImage  \
--initrd /test/initramfs
--append "console=ttyS0 panic=1" \
--enable-kvm \
--no-reboot \
--nographic 
+qemu-system-x86_64 -kernel /shared_kernel/arch/x86_64/boot/bzImage -initrd /test/initramfs -append "console=ttyS0 panic=1" -enable-kvm -no-reboot -nographic 
