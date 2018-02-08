@@ -2,6 +2,7 @@
 
 This is my attempt to make compiling of custom linux kernel(for kernel dev) followed by their super fast testing while booting. All this has been made as easy as possible. 
 
+
 ## Prereq:
 
 - Install docker on your system. (The downside)
@@ -20,22 +21,30 @@ This is my attempt to make compiling of custom linux kernel(for kernel dev) foll
   
 ## Usage: 
 
+NOTE: ktest.sh may not work on your sytem if it Mac or Windows. Therefore I've provided alternative commands for almost everything. Therefore this can run on any x86/x86_64 system with virtualization enabled(using boot menu) and docker installed regardless of the OS(a few changes might be required).
+
 - Clone this repo on your system using: `git clone https://github.com/geekSiddharth/FlashKernelTester.git`
 
-- Open ktest.sh to edit the following variable
-    - KERNEL_SOURCE
-        It refers to the absolute linux kernal path. (Path should end in /)  
+- Open ktest.sh to edit the following variable  
+    - **KERNEL_SOURCE**   
+        It refers to the absolute linux kernal path. (Path should end in /)     
         Example: `KERNEL_SOURCE=/home/sid/linux-master/` where `/home/sid/linux-master/` is the absolute linux kernal path
-    - TEST_SOURCE
-        It refers to the absolute path of the testing code. (Path should end in /)    
-        The pointed folder must constain a file called test.c 
-        (You can leave it to its default value for seeing if everything is working fine)
+    - **TEST_SOURCE**  
+        It refers to the absolute path of the testing code. (Path should end in /)      
+        The pointed folder must constain a file called test.c   
+        (You can leave it to its default value for seeing if everything is working fine)  
 
--  Make ktest.sh executable by using: `chmod +x ktest.sh`
+-  Make ktest.sh executable by using: `chmod +x ktest.sh` 
 
 - If you are making the kernel for the first time, use:
     ```
     ./ktest.sh make1
+    ```
+    OR
+    ```
+      KERNEL_SOURCE=/home/sid/linux-master/
+
+      docker run -it -v $KERNEL_SOURCE:/shared_kernel geeksid/kernel_tester bash ./make_first.sh
     ```
 
     Note this may take A LOT OF TIME if you are executing ktest.sh for the first time on you system.
@@ -44,10 +53,28 @@ This is my attempt to make compiling of custom linux kernel(for kernel dev) foll
     ```
     ./ktest.sh test
     ```
+    OR
+    
+    ```
+      KERNEL_SOURCE=/home/sid/linux-master/
+      TEST_SOURCE=$PWD/hello_world_test
+
+       docker run  --privileged -it -v $KERNEL_SOURCE:/shared_kernel/ -v $TEST_SOURCE:/test/ geeksid/kernel_tester bash ./test.sh
+    ```
 
 - If you want to recompile on a part of kernel which *resides in a folder with relative path within the linux folder as ./fold*, use this to build,
     ```
     ./ktest.sh makes ./fold
+    ```
+    
+    OR
+    
+    ```
+      KERNEL_SOURCE=/home/sid/linux-master/
+      TEST_SOURCE=$PWD/hello_world_test
+      CHANGE_FOLDER=./fold
+      docker run -it -v $KERNEL_SOURCE:/shared_kernel geeksid/kernel_tester bash ./make_small.sh $CHANGE_FOLDER
+
     ```
     
     This is much faster.
