@@ -48,3 +48,17 @@ This is my attempt to make compiling of custom linux kernel(for kernel dev) foll
     ```
     
     This is much faster.
+
+### ?
+
+##### Why so fast?
+
+- We are not building the whole kernel. `config` file in `docker/` stores aprx minimum configurations.
+    - drastically reduces building time
+    - fast bootup time
+- `makes` only builds the folder. If you are making changes to the sys call, whose code reside in particular folder, it is much faster to use `makes <relative(to Linux Source folder) path to the folder>`
+- The building is done on the docker platform, which has almost no performace overhead. Therefore full utilization of your system resources and hence much faster booting time(than building inside a slow VM)
+
+##### Why so fast?
+
+You remember the init process? It is the first process to be executed. Before init starts to execute , the kernel is executing. The test.c file is changed to a static binary and is passed to the kernel as the init process. The kernel executes the the static binary and it exits.
