@@ -1,6 +1,6 @@
 # FlashKernelTester 
 
-This is my attempt to make compiling of custom linux kernel(for kernel dev) followed by their fast testing while booting.
+This is my attempt to make compiling of custom linux kernel(for kernel dev) followed by their testing really easy and fast.
 
 
 ## Prereq:
