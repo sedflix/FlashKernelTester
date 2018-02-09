@@ -15,7 +15,7 @@ This is my attempt to make compiling of custom linux kernel(for kernel dev) foll
   - `sudo docker run -it ubuntu` (for windows)
   - This will take some time as it will download ubuntu image.
   - It will change your prompt to something like `root@4d4c9750e9e0:/#`. This is the shell of an full fledged ubuntu running on docker.
-- You should have downloaded your linux kernel on your system (>v4.0. Tested on v4.15 and v4.9)
+- You should have downloaded the linux kernel on your system (Test on kernel verion v3.13)
 - Make the test file required to run on bootup (This is the only code that will run on the new kernal) and store it in a folder with name of the `.c` file as `test.c`
   
   
