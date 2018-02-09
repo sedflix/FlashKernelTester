@@ -20,12 +20,10 @@ RUN mv /tmp/etcd-${ETCDCTL_VERSION}-${ETCDCTL_ARCH}/etcdctl /usr/local/bin/etcdc
 
 RUN apt-get install -yf build-essential qemu-system-x86 \
                                         make \
-                                        gcc \
+                                        gcc-4.8 \
                                         unzip \
 					git
-RUN apt-get install -y virt-viewer \
-                                        libvirt-bin \
-                                        libelf-dev \ 
+RUN apt-get install -yf  libelf-dev \ 
                                         chrpath \
                                         gawk \
                                         texinfo \
