@@ -1,10 +1,7 @@
 
-# Assignment 2
+# syscall: sh_task_info
 
-
-**Name:** Siddharth Yadav
-**Roll Number:** 2016268
-
+Note: Patch tested with only linux-3.13
 
 ### Usage:
 
@@ -92,8 +89,3 @@ it has been well documented. Hence refer to the code for more implementation det
 
 A `test.c` file is provided for the same.
 It invokes the system call and then read the info written in the file and prints it on the console.  
-
-NOTE: 
-- All the testing(which includes building the kernel and running `test.c`) has been done using:- https://github.com/geekSiddharth/FlashKernelTester 
-- diff generated using `git diff`
-- A patch has been submitted
