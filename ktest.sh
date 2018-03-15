@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KERNEL_SOURCE=/home/sid/Study/SEM4/OS/os-w18-kernel/linux-3.19/ 
+KERNEL_SOURCE=/home/username/path/tolinux/
 TEST_SOURCE=$PWD/hello_world_test
 
 if [ "$1" == "make1" ]; then
