@@ -1,0 +1,187 @@
+diff --git a/Makefile b/Makefile
+index b8b7f74..484d531 100644
+--- a/Makefile
++++ b/Makefile
+@@ -754,7 +754,7 @@ export mod_sign_cmd
+ 
+ 
+ ifeq ($(KBUILD_EXTMOD),)
+-core-y		+= kernel/ mm/ fs/ ipc/ security/ crypto/ block/
++core-y		+= kernel/ mm/ fs/ ipc/ security/ crypto/ block/ task_info/
+ 
+ vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
+ 		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
+diff --git a/arch/x86/syscalls/syscall_64.tbl b/arch/x86/syscalls/syscall_64.tbl
+index 38ae65d..9742f74 100644
+--- a/arch/x86/syscalls/syscall_64.tbl
++++ b/arch/x86/syscalls/syscall_64.tbl
+@@ -320,6 +320,7 @@
+ 311	64	process_vm_writev	sys_process_vm_writev
+ 312	common	kcmp			sys_kcmp
+ 313	common	finit_module		sys_finit_module
++314 common  sh_task_info    sys_sh_task_info
+ 
+ #
+ # x32-specific system call numbers start at 512 to avoid cache impact
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 94273bb..fc4b27b 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -847,4 +847,5 @@ asmlinkage long sys_process_vm_writev(pid_t pid,
+ asmlinkage long sys_kcmp(pid_t pid1, pid_t pid2, int type,
+ 			 unsigned long idx1, unsigned long idx2);
+ asmlinkage long sys_finit_module(int fd, const char __user *uargs, int flags);
++asmlinkage long sys_sh_task_info(int task_pid,char* file_name);
+ #endif
+diff --git a/task_info/Makefile b/task_info/Makefile
+new file mode 100644
+index 0000000..ed890d5
+--- /dev/null
++++ b/task_info/Makefile
+@@ -0,0 +1 @@
++obj-y:=task_info.o
+\ No newline at end of file
+diff --git a/task_info/task_info.c b/task_info/task_info.c
+new file mode 100644
+index 0000000..96765f0
+--- /dev/null
++++ b/task_info/task_info.c
+@@ -0,0 +1,138 @@
++#include<linux/kernel.h>
++#include<linux/init.h>
++#include<linux/sched.h>
++#include<linux/syscalls.h>
++#include <linux/kernel.h> 
++#include <linux/init.h> 
++#include <linux/module.h> 
++#include <linux/syscalls.h> 
++#include <linux/file.h> 
++#include <linux/fs.h>
++#include <linux/fcntl.h> 
++#include <asm/uaccess.h>
++
++
++
++/**
++ * A function to write the `data` to the  file `filename`.
++ * Apt error message are returned if it fails.
++ * 
++ * */
++static int write_file(char *filename, char* data) 
++{
++
++  struct file *file_pointer = NULL;
++
++  // we are going to change the file system. 
++  // for restoring the file system
++  mm_segment_t old_file_system = get_fs();
++
++  // change fs to KERNEL_DS
++  // WHY USER DS doesn't work?
++  set_fs(get_ds());
++
++  // opening the file in CREATE and READ WRITE MODE
++  file_pointer = filp_open(filename, O_RDWR | O_CREAT , S_IRUSR | S_IRGRP | S_IROTH);
++
++
++  // IS_ERR is a macro for checking file
++  if(IS_ERR(file_pointer)) {
++    printk("file open error...\n");
++    return PTR_ERR(file_pointer);
++}
++
++
++  //Finally I wrote in the file
++  file_pointer->f_op->write(file_pointer, data, strlen(data), &file_pointer->f_pos);
++
++  // Closing the file
++  filp_close(file_pointer,NULL);
++
++  //restoring the proper address limit in the kernel
++  set_fs(old_file_system);
++
++  return 0;
++}
++
++SYSCALL_DEFINE2(sh_task_info, int, task_pid, char*,file_name)
++{
++    struct task_struct *proces;
++
++    // to check if we have found the process with given pid 
++    int found = 0;
++
++    // looping through the entire process list until we reach init task again
++    for (proces = &init_task ; (proces = next_task(proces)) != &init_task ; ) {
++        if(proces->pid == task_pid) {
++            found = 1;
++
++            // gathering task info
++            // BAD CODE!!!!
++            char taskString[1023];
++
++             
++            sprintf( taskString,
++            "Process: %s\n \
++            PID_Number: %ld\n \
++            Process State: %ld\n \
++            Priority: %ld\n \
++            Static Priority: %ld\n \
++            Normal Priority: %ld\n \
++            RT_Priority: %ld\n \
++            Pid: %ld \n \
++            Tgid: %ld \n \
++            Scheduling on rq: %d \n \
++            Scheduling vruntime: %d \n \
++            Scheduling prev_sum_exec_runtime: %d \n \
++            cpu: %d \n \
++            thread struct sp 0: %d \n \
++            Real Blocked: %d \n \
++            Blocked: %d \n", \
++            proces->comm, \
++            (long)task_pid_nr(proces), \
++            (long)proces->state, \
++            (long)proces->prio, \
++            (long)proces->static_prio, \
++            (long)proces->normal_prio, \
++            (long)proces->rt_priority, \
++            (long)proces->pid,\
++            (long)proces->tgid, \
++            proces->se.on_rq, \
++            proces->se.vruntime, \
++            proces->se.prev_sum_exec_runtime, \
++            proces->thread, \
++            proces->thread.sp0, \
++            proces->real_blocked, \
++            proces->blocked
++    );
++
++    //checks if we have patent process
++            if(proces->parent) {
++                strcat(taskString, "\nParent Process Name: ");
++                strcat(taskString,  proces->parent->comm);
++            }
++            
++            strcat(taskString,"\n");
++
++            //printing the task info
++            printk(taskString);
++
++            if(file_name == NULL) {
++                printk("No file name given. Hence info not written to the file\n");
++                return 600;
++            }
++
++            // writing to the given file_name 
++            return write_file(file_name, taskString);
++        }
++  
++    }
++
++    if(found == 0) {
++        printk("No task with pid \"%d\" found\n", task_pid);
++        // ESRCH -> No such process
++        return ESRCH;
++    }
++  
++  return 0;
++}

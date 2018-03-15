@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <linux/kernel.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main()
+{  
+    printf("Invoking 'listProcessInfo' system call");
+t *structdirent;
+
+        int no_of_items = 0;
+
+        while ((structdirent = readdir(directory)) != NULL) {
+           printf(structdirent->d_name);
+        }
+        closedir(directory);
+    }
+         
+    long int ret_status = syscall(314,1,"this.txt"); // 323 is the syscall number
+
+
+    FILE *file = fopen("this.xt","r"); // read mode
+
+
+   if( file == NULL ){
+      perror("Error while opening the file.\n");
+      exit(EXIT_FAILURE);
+   }
+
+    char ch;
+    while( ( ch = fgetc(file) ) != EOF )
+      printf("%c",ch);
+
+        
+    if(ret_status == 0) 
+         printf("System call 'listProcessInfo' executed correctly. Use dmesg to check processInfo\n");
+    
+    else 
+         printf("System call 'listProcessInfo' did not execute as expected\n");
+          
+     return 0;
+}

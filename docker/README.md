@@ -1,5 +1,8 @@
 # kernelTester
 
+http://mgalgs.github.io/2015/05/16/how-to-build-a-custom-linux-kernel-for-qemu-2015-edition.html
+http://www.kaizou.org/2016/09/boot-minimal-linux-qemu/
+
 ## Ubuntu ubuntu-14.04.1-server-amd64
 
 - `qemu-img create ubuntu-14.04.1-server-amd64.img 50G`
