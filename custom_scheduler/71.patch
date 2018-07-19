@@ -1,0 +1,198 @@
+diff --git a/linux-3.19/Makefile b/linux-3.19/Makefile
+index b15036b1..70f54198 100644
+--- a/linux-3.19/Makefile
++++ b/linux-3.19/Makefile
+@@ -879,7 +879,7 @@ export mod_sign_cmd
+ 
+ 
+ ifeq ($(KBUILD_EXTMOD),)
+-core-y		+= kernel/ mm/ fs/ ipc/ security/ crypto/ block/
++core-y		+= kernel/ mm/ fs/ ipc/ security/ crypto/ block/ rtnice/
+ 
+ vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
+ 		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
+diff --git a/linux-3.19/arch/x86/syscalls/syscall_64.tbl b/linux-3.19/arch/x86/syscalls/syscall_64.tbl
+index 8d656fbb..cd169ed3 100644
+--- a/linux-3.19/arch/x86/syscalls/syscall_64.tbl
++++ b/linux-3.19/arch/x86/syscalls/syscall_64.tbl
+@@ -329,6 +329,7 @@
+ 320	common	kexec_file_load		sys_kexec_file_load
+ 321	common	bpf			sys_bpf
+ 322	64	execveat		stub_execveat
++323 common  rtnice    sys_rtnice
+ 
+ #
+ # x32-specific system call numbers start at 512 to avoid cache impact
+diff --git a/linux-3.19/include/linux/sched.h b/linux-3.19/include/linux/sched.h
+index 8db31ef9..59b3a8b6 100644
+--- a/linux-3.19/include/linux/sched.h
++++ b/linux-3.19/include/linux/sched.h
+@@ -1188,6 +1188,11 @@ struct sched_entity {
+ 	/* Per-entity load-tracking */
+ 	struct sched_avg	avg;
+ #endif
++
++	/*
++		realtime guarante
++	*/
++	u64 rt_time_slice;
+ };
+ 
+ struct sched_rt_entity {
+diff --git a/linux-3.19/include/linux/syscalls.h b/linux-3.19/include/linux/syscalls.h
+index 85893d74..f09efe23 100644
+--- a/linux-3.19/include/linux/syscalls.h
++++ b/linux-3.19/include/linux/syscalls.h
+@@ -881,5 +881,5 @@ asmlinkage long sys_bpf(int cmd, union bpf_attr *attr, unsigned int size);
+ asmlinkage long sys_execveat(int dfd, const char __user *filename,
+ 			const char __user *const __user *argv,
+ 			const char __user *const __user *envp, int flags);
+-
++asmlinkage long sys_rtnice (int task_pid, int rt_time_slice);
+ #endif
+diff --git a/linux-3.19/kernel/exit.c b/linux-3.19/kernel/exit.c
+index 6806c554..36f114ef 100644
+--- a/linux-3.19/kernel/exit.c
++++ b/linux-3.19/kernel/exit.c
+@@ -652,6 +652,12 @@ static inline void check_stack_usage(void) {}
+ void do_exit(long code)
+ {
+ 	struct task_struct *tsk = current;
++	/*
++		to prevent `kernel panic: invalid opcode: 0000....` error
++
++		pick_next_entity  will keep scheduling this task, even if it is dead, if this step was not taken
++	*/
++	tsk->se.rt_time_slice = 0LLU;
+ 	int group_dead;
+ 	TASKS_RCU(int tasks_rcu_i);
+ 
+diff --git a/linux-3.19/kernel/sched/fair.c b/linux-3.19/kernel/sched/fair.c
+index fe331fc3..e6cac0ff 100644
+--- a/linux-3.19/kernel/sched/fair.c
++++ b/linux-3.19/kernel/sched/fair.c
+@@ -19,7 +19,7 @@
+  *  Adaptive scheduling granularity, math enhancements by Peter Zijlstra
+  *  Copyright (C) 2007 Red Hat, Inc., Peter Zijlstra <pzijlstr@redhat.com>
+  */
+-
++#include<linux/kernel.h>
+ #include <linux/latencytop.h>
+ #include <linux/sched.h>
+ #include <linux/cpumask.h>
+@@ -456,7 +456,21 @@ static inline u64 min_vruntime(u64 min_vruntime, u64 vruntime)
+ static inline int entity_before(struct sched_entity *a,
+ 				struct sched_entity *b)
+ {
+-	return (s64)(a->vruntime - b->vruntime) < 0;
++	/**
++	This is kind of the comparator for rb tree in cfs.
++	CHECK LOGIC:
++	*/
++	
++	if( a->rt_time_slice == 0 && b->rt_time_slice == 0) {
++		return (s64)(a->vruntime - b->vruntime) < 0;
++	} else if(a->rt_time_slice == 0) {
++		// b must scheduled and hence a is not before b
++		return false;
++	} else  if(b->rt_time_slice == 0) {
++		return true;
++	} else {
++		return a->rt_time_slice < b->rt_time_slice;
++	}
+ }
+ 
+ static void update_min_vruntime(struct cfs_rq *cfs_rq)
+@@ -691,6 +705,7 @@ void init_task_runnable_average(struct task_struct *p)
+ /*
+  * Update the current task's runtime statistics.
+  */
++
+ static void update_curr(struct cfs_rq *cfs_rq)
+ {
+ 	struct sched_entity *curr = cfs_rq->curr;
+@@ -710,6 +725,26 @@ static void update_curr(struct cfs_rq *cfs_rq)
+ 		      max(delta_exec, curr->statistics.exec_max));
+ 
+ 	curr->sum_exec_runtime += delta_exec;
++
++
++	/*
++		Decrements rt_time_slice by delta_exec, if it is being used 
++	*/
++	if ((s64)curr->rt_time_slice > 0) {
++
++		u64 del = curr->rt_time_slice - delta_exec;
++
++		// to make sure that it doesn't go less than zero
++		if ((s64)del <= 0) {
++			curr->rt_time_slice = 0ULL;
++			printk("\n\nInside kernel: OOOOOOOO\n\n");
++		} else {
++			curr->rt_time_slice=del;
++		}
++
++		// printk("\nInside kernel: %llu \n",curr->rt_time_slice);
++	}
++	
+ 	schedstat_add(cfs_rq, exec_clock, delta_exec);
+ 
+ 	curr->vruntime += calc_delta_fair(delta_exec, curr);
+@@ -3248,7 +3283,6 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+ 		se = cfs_rq->next;
+ 
+ 	clear_buddies(cfs_rq, se);
+-
+ 	return se;
+ }
+ 
+diff --git a/linux-3.19/rtnice/Makefile b/linux-3.19/rtnice/Makefile
+new file mode 100644
+index 00000000..ee91de96
+--- /dev/null
++++ b/linux-3.19/rtnice/Makefile
+@@ -0,0 +1 @@
++obj-y:=rtnice.o
+diff --git a/linux-3.19/rtnice/rtnice.c b/linux-3.19/rtnice/rtnice.c
+new file mode 100644
+index 00000000..558a7d01
+--- /dev/null
++++ b/linux-3.19/rtnice/rtnice.c
+@@ -0,0 +1,37 @@
++#include<linux/kernel.h>
++#include<linux/init.h>
++#include<linux/sched.h>
++#include<linux/syscalls.h>
++#include <linux/kernel.h> 
++#include <linux/init.h> 
++#include <linux/module.h> 
++#include <linux/syscalls.h> 
++#include <linux/file.h> 
++#include <linux/fs.h>
++#include <linux/fcntl.h> 
++#include <asm/uaccess.h>
++
++
++
++SYSCALL_DEFINE2(rtnice, int, task_pid, int, rt_time_slice)
++{
++
++    struct task_struct *proces;
++    proces = find_task_by_vpid(task_pid);
++    
++    if (proces) {
++        // setting rt_time_slice
++        // 750000ULL is the minimum granularity
++        proces->se.rt_time_slice = 750000ULL * rt_time_slice;
++        printk("\rt_time_slice set to %llu \n", proces->se.rt_time_slice);
++    }
++    else {
++        printk("No task with pid \"%d\" found\n", task_pid);
++        // ESRCH -> No such process
++        return ESRCH;
++    }
++
++    // to make the the modified process runs
++    schedule();
++    return 0;
++}
